@@ -51,6 +51,11 @@ namespace CityInfo.API.Controllers
         public ActionResult<PointOfInterestDto> CreatePointOfInterest(int
             cityId, [FromBody] PointOfInterestForCreationDto pointOfInterest) //[FromBody] is default here we can omit it
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id
                 == cityId);
             if (city == null)
