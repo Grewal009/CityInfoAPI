@@ -8,7 +8,8 @@ namespace CityInfo.API.Controllers
     public class PointsOfInterestController : ControllerBase
     {
         [HttpGet]
-        public ActionResult<IEnumerable<PointOfInterestDto>> GetPointsOfInterest(int cityId)
+        public ActionResult<IEnumerable<PointOfInterestDto>>
+            GetPointsOfInterest(int cityId)
         {
             var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c
                 .Id == cityId);
@@ -21,8 +22,8 @@ namespace CityInfo.API.Controllers
             return Ok(city.PointOfInterest);
         }
 
-        [HttpGet("{pointOfInterestId}")]
-        public ActionResult<PointOfInterestDto> GetPointOfInterest(int 
+        [HttpGet("{pointOfInterestId}", Name = "GetPointOfInterest")]
+        public ActionResult<PointOfInterestDto> GetPointOfInterest(int
             cityId, int pointOfInterestId)
         {
             var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c
@@ -32,7 +33,7 @@ namespace CityInfo.API.Controllers
             {
                 return NotFound();
             }
-            
+
             //find point of interest
             var pointOfInterest =
                 city.PointOfInterest.FirstOrDefault(
@@ -44,8 +45,40 @@ namespace CityInfo.API.Controllers
             }
 
             return Ok(pointOfInterest);
-
         }
 
+        [HttpPost]
+        public ActionResult<PointOfInterestDto> CreatePointOfInterest(int
+            cityId, [FromBody] PointOfInterestForCreationDto pointOfInterest) //[FromBody] is default here we can omit it
+        {
+            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id
+                == cityId);
+            if (city == null)
+            {
+                return NotFound();
+            }
+            
+            //calculate pointsOfInterest new Id based on previous Ids
+            var maxPointOdInterestId = CitiesDataStore.Current.Cities
+                .SelectMany(c => c.PointOfInterest).Max(p => p.Id);
+
+            var finalPointOfInterest = new PointOfInterestDto()
+            {
+                Id = ++maxPointOdInterestId,
+                Name = pointOfInterest.Name,
+                Description = pointOfInterest.Description
+            };
+            
+            city.PointOfInterest.Add(finalPointOfInterest);
+
+            return CreatedAtRoute("GetPointOfInterest",new
+            {
+                cityId = cityId,
+                pointOfInterestId = finalPointOfInterest.Id
+            },
+                finalPointOfInterest);
+
+
+        }
     }
 }
